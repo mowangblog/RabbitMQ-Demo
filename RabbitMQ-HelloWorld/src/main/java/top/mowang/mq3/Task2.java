@@ -25,6 +25,8 @@ public class Task2 {
 
     public static void main(String[] args) throws Exception {
         Channel channel = RabbitMQUtil.getChannel();
+        //开启发布确认
+        channel.confirmSelect();
         //产生一个队列
         //1队列名称，2消息是否持久化，默认消息存储在内存中
         //3队列是否只供一个消费者，是否进行消息共享，默认不共享
