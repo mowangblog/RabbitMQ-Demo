@@ -56,4 +56,5 @@ public class SendMsgController {
                     return msg;
                 });
     }
+
 }
