@@ -1,15 +1,13 @@
 package top.mowang.rabbitmq.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.AmqpException;
-import org.springframework.amqp.core.Message;
-import org.springframework.amqp.core.MessagePostProcessor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import top.mowang.rabbitmq.config.DelayedQueueConfig;
 
 /**
  * RabbitMQ-Demo
@@ -21,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequestMapping("ttl")
+@SuppressWarnings("all")
 public class SendMsgController {
     @Autowired
     RabbitTemplate rabbitTemplate;
@@ -37,9 +36,23 @@ public class SendMsgController {
                         @PathVariable String time) {
         log.info("服务器接收到消息{}，延迟{}秒发送到队列C", message, time);
         rabbitTemplate.convertAndSend("X", "XC",
-                "队列C接受延迟" + time + "秒消息：" + message,
+                "队列C接受延迟" + time + "毫秒消息：" + message,
                 msg -> {
                     msg.getMessageProperties().setExpiration(time);
+                    return msg;
+                });
+    }
+
+    //发送基于插件的延迟消息
+    @GetMapping("/sendDelayedMsg/{message}/{time}")
+    public void sendDelayedMsg(@PathVariable String message,
+                        @PathVariable Integer time) {
+        log.info("服务器接收到消息{}，延迟{}秒发送到延迟队列", message, time);
+        rabbitTemplate.convertAndSend(DelayedQueueConfig.DELAYED_EXCHANGE_NAME,
+                DelayedQueueConfig.DELAYED_ROUTING_KEY,
+                "延迟队列接受延迟" + time + "毫秒消息：" + message,
+                msg -> {
+                    msg.getMessageProperties().setDelay(time);
                     return msg;
                 });
     }
